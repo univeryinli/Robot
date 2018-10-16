@@ -30,3 +30,5 @@
 ..\obj\delay.o: ..\STM32F10x_FWLiB\inc\stm32f10x_usart.h
 ..\obj\delay.o: ..\STM32F10x_FWLiB\inc\stm32f10x_wwdg.h
 ..\obj\delay.o: ..\STM32F10x_FWLiB\inc\misc.h
+..\obj\delay.o: ..\SYSTEM\usart\usart.h
+..\obj\delay.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h

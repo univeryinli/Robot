@@ -12,7 +12,7 @@
 #include "lanya.h"
 
 extern int is_obj;
-
+float min;
 int main()
 {
 	delay_init();	    	 //延时函数初始?
@@ -25,19 +25,19 @@ int main()
 	My_USART3_Init();
 	uart2_init(9600);	 //串口初始化为9600
 	TIM4_Int_Init();
- 	
-//	Hcsr04GetLength();
 	
 	while(1)
 	{
 		
 //		choose(1,USART3_RX_STA,USART3_RX_BUF);
-		USART2_rx();
-//		min=Hcsr04GetLength();
-//		printf("%dxiao",is_obj);
-//		LED0= 1;
-		delay_ms(10);
-//		LED0=0;
+//		USART2_rx();
+//		min=Hcsr04GetLength(0);
+//		min=Hcsr04_min_Length();
+//		printf("%fchaoshegn \n",min);
+//		LED0=!LED0;
+//		delay_ms(500);
+//		min=Hcsr04_min_Length();
+//		printf("%fchaoshegn \n",min);
 		
 	}
 	

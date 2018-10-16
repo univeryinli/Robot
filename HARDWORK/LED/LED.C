@@ -20,5 +20,3 @@ void LED_Init(void)
 	GPIO_Init(GPIOD,&GPIO_Initstruct);
 	GPIO_SetBits(GPIOD,GPIO_Pin_2);
 }
-
-

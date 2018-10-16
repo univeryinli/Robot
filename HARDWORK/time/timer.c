@@ -113,8 +113,8 @@ void TIM4_Int_Init(void)
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE); //时钟使能
 
-	TIM_TimeBaseStructure.TIM_Period = (5000-1); //设置在下一个更新事件装入活动的自动重装载寄存器周期的值	 计数到5000为500ms
-	TIM_TimeBaseStructure.TIM_Prescaler = (719-1); //设置用来作为TIMx时钟频率除数的预分频值  10Khz的计数频率  
+	TIM_TimeBaseStructure.TIM_Period = (1000-1); //设置在下一个更新事件装入活动的自动重装载寄存器周期的值	 计数到5000为500ms
+	TIM_TimeBaseStructure.TIM_Prescaler = (72-1); //设置用来作为TIMx时钟频率除数的预分频值  10Khz的计数频率  
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0; //设置时钟分割:TDTS = Tck_tim
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;  //TIM向上计数模式
 	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure); //根据TIM_TimeBaseInitStruct中指定的参数初始化TIMx的时间基数单位
@@ -142,7 +142,7 @@ void TIM4_IRQHandler(void)   //TIM4中断
 		TIM_ClearITPendingBit(TIM4, TIM_IT_Update  );  //清除TIMx的中断待处理位:TIM 中断源 
 		LED0=!LED0;
 //		printf("dingshiqi 4\n");
-		min=Hcsr04GetLength();
+		min=Hcsr04_min_Length();
 		if(min<=4)
 		{
 			is_obj=1;
@@ -153,5 +153,3 @@ void TIM4_IRQHandler(void)   //TIM4中断
 		}
 //	printf("%d is_obj",is_obj);
 }
-
-

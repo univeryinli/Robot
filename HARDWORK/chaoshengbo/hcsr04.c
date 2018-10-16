@@ -1,21 +1,22 @@
 #include "hcsr04.h"
 #include "usart.h"
 #include "delay.h"
- 
+
 #define HCSR04_PORT     GPIOB
 #define HCSR04_CLK      RCC_APB2Periph_GPIOB
-#define HCSR04_TRIG     GPIO_Pin_5
-#define HCSR04_ECHO     GPIO_Pin_6
+#define HCSR04_TRIG     GPIO_Pin_9
+#define HCSR04_ECHO     GPIO_Pin_4|GPIO_Pin_5
  
-#define TRIG_Send  PBout(5) 
-#define ECHO_Reci  PBin(6)
+#define TRIG_Send  PBout(5)
+#define ECHO_Reci  PBin(4)
  
 u16 msHcCount = 0;//ms计数
 
 /*
 if you want detect obj,so you can use flag is_obj. 
 */
-int is_obj; 
+int is_obj;
+
 void Hcsr04Init()
 {  
     TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;     //生成用于定时器设置的结构体
@@ -47,7 +48,7 @@ void Hcsr04Init()
 		TIM_ClearFlag(TIM6, TIM_FLAG_Update);   //清除更新中断，免得一打开中断立即产生中断
 		TIM_ITConfig(TIM6,TIM_IT_Update,ENABLE);    //打开定时器更新中断
 		hcsr04_NVIC();
-    TIM_Cmd(TIM6,DISABLE);     
+    TIM_Cmd(TIM6,DISABLE);      
 }
  
 //tips：static函数的作用域仅限于定义它的源文件内，所以不需要在头文件里声明
@@ -103,14 +104,13 @@ u32 GetEchoTimer(void)
 //				printf("%d\n",msHcCount);
 	      TIM6->CNT = 0;  //将TIM2计数寄存器的计数值清零
 //	      printf("ok3\n");
-//				Delay_Us(50);
+				delay_ms(30);
         return t;
 }
  
 
 //冒泡排序，从大到小
 void sortA2(float a[], int length){
-
     int i, j; 
 		float	temp;
 
@@ -130,66 +130,97 @@ void sortA2(float a[], int length){
     }
 }
 
+/*
 //一次获取超声波测距数据 两次测距之间需要相隔一段时间，隔断回响信号
 //为了消除余震的影响，取五次数据的平均值进行加权滤波。
 float Hcsr04GetLength(void)
 {
 	u32 t = 0;
-	int i = 0,j;
+	int i = 0,j,s;
 	float lengthTemp = 0,min;
 	float sum = 0;
-	int num=4;
+	int num=1;
 	float length[4];
 	for(j=0;j<num;j++)
 	{
-//		printf("%d号超声波开始检测\n\n",j+1);	
+//		s=2*j;
+		printf("%d号超声波开始检测\n\n",j+1);
+//		printf("%djjj",s);
 		while(i<5)
 		{
 		PBout(5) = 1;      //发送口高电平输出
-		Delay_Us(20);
+		delay_us(20);
 		PBout(5) = 0;
-	  	while(PBin ((j+6)) == 0);      //等待接收口高电平输出
-			OpenTimerForHc();        //打开定时器
-			i = i + 1;
-			while(PBin ((j+6)) == 1);
-			CloseTimerForHc();        //关闭定时器
-			t = GetEchoTimer();        //获取时间,分辨率为1US
-			lengthTemp = ((float)t/58.0);//cm
-			sum = lengthTemp + sum ;
+		
+		while(PBin((0+4)) == 0);      //等待接收口高电平输出
+		OpenTimerForHc();        //打开定时器
+		printf("ok");
+		i = i + 1;
+		while(PBin((0+4)) == 1);
+		CloseTimerForHc();        //关闭定时器
+		t = GetEchoTimer();        //获取时间,分辨率为1US
+		lengthTemp = ((float)t/58.0);//cm
+		sum = lengthTemp + sum ;
 		}
 		lengthTemp = sum/5.0;
 		length[j]=lengthTemp;
-//	  printf("%d号超声波数值=%.3fcm\n\n",j+1,lengthTemp);		  
+	  printf("%d号超声波数值=%.3fcm\n\n",j+1,lengthTemp);		  
 		i=0;
     lengthTemp = 0;	
-    sum = 0;		
+    sum = 0;
 	}
-	sortA2(length,num);
-	min= (length[num-1]+length[num-2]+length[num-3])/3;
+//	sortA2(length,num);
+//	min= (length[num-1]+length[num-2]+length[num-3])/3;
+	  
 //	printf("%fzuida",min);
+	return 1;
+}
+*/
+
+//一次获取超声波测距数据 两次测距之间需要相隔一段时间，隔断回响信号
+//为了消除余震的影响，取五次数据的平均值进行加权滤波。
+float Hcsr04GetLength(int j)
+{
+	u32 t = 0;
+	int i;
+	float sum=0,lengthTemp;
+	for(i=0;i<5;i++)
+	{
+		PBout(9) = 1;      //发送口高电平输出
+		delay_us(20);
+		PBout(9) = 0;
+		while(PBin((4+j)) == 0);      //等待接收口高电平输出
+		OpenTimerForHc();        //打开定时器
+		while(PBin((4+j)) == 1);
+		CloseTimerForHc();        //关闭定时器
+		t = GetEchoTimer();        //获取时间,分辨率为1US
+		lengthTemp = ((float)t/58.0);//cm
+		sum = lengthTemp + sum ;
+
+	}
+	lengthTemp = sum/5.0;
+	return lengthTemp;
+}
+
+// size is sensor size, and the min_size is to get nums of  min length
+float Hcsr04_min_Length()
+{
+	int j,size=3,k,min_size=1;
+	float length,min,sum=0;
+	float length_num[3]={0};
+	for(j=0;j<size;j++)
+	{
+//		printf("%d号超声波开始检测\n\n",j+1);
+		length=Hcsr04GetLength(j);
+		length_num[j]=length;
+//		printf("%d号超声波数值=%.3fcm\n\n",j+1,length);	
+		
+	}
+	sortA2(length_num, size);
+	for (k=0;k<min_size;k++)
+	{
+		sum=sum+length_num[size-1-k];
+	}
+	min=sum/min_size;
 	return min;
 }
-
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-** 函数名称: Delay_Ms_Ms
-** 功能描述: 延时1MS (可通过仿真来判断他的准确度)			
-** 参数描述：time (ms) 注意time<65535
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-void Delay_Ms(uint16_t time)  //延时函数
-{ 
-	uint16_t i,j;
-	for(i=0;i<time;i++)
-  		for(j=0;j<10260;j++);
-}
-/*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-** 函数名称: Delay_Ms_Us
-** 功能描述: 延时1us (可通过仿真来判断他的准确度)
-** 参数描述：time (us) 注意time<65535				 
-:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
-void Delay_Us(uint16_t time)  //延时函数
-{ 
-	uint16_t i,j;
-	for(i=0;i<time;i++)
-  		for(j=0;j<9;j++);
-}
-
